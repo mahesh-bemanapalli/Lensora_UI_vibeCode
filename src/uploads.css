@@ -1,0 +1,33 @@
+.file-label {
+  display: grid !important;
+  gap: 8px;
+}
+.file-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.file-label span {
+  display: inline-block;
+  width: max-content;
+  border: 1px dashed #8f8578;
+  padding: 10px 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.file-label input:focus + span {
+  outline: 2px solid #1d1b18;
+  outline-offset: 2px;
+}
+.file-label input:disabled + span {
+  opacity: 0.55;
+  cursor: wait;
+}
+.upload-preview {
+  width: min(100%, 280px);
+  max-height: 200px;
+  object-fit: cover;
+  border: 1px solid #e5dfd4;
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../lib/api";
 import { Navbar } from "../components/Navbar";
+import { Footer } from "../components/Footer";
 
 export function PhotographerPage() {
   const { slug } = useParams();
@@ -46,7 +47,7 @@ export function PhotographerPage() {
   if (status === "missing")
     return <main className="state">This photographer could not be found.</main>;
   return (
-    <main>
+    <main id="top">
       <section className="hero">
         <div className="hero-image" />
         <div className="hero-overlay" />
@@ -147,6 +148,7 @@ export function PhotographerPage() {
           )}
         </form>
       </section>
+      <Footer photographerName={profile.name} location={profile.location} />
     </main>
   );
 }

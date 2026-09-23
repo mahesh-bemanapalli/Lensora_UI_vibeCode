@@ -36,6 +36,7 @@ export function BookingsPage() {
                   <span className={`status ${booking.status.toLowerCase()}`}>{booking.status}</span>
                   <h2>{booking.clientName}</h2>
                   <a href={`mailto:${booking.clientEmail}`}>{booking.clientEmail}</a>
+                  {booking.packageName && <p>Package: {booking.packageName}</p>}
                   <p>
                     Event date: {new Date(`${booking.eventDate}T00:00:00`).toLocaleDateString()}
                   </p>

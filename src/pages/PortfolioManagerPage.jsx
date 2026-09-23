@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { uploadImage } from "../lib/uploads";
 import { AdminNav } from "../components/AdminNav";
+import { nextDisplayOrder, displayOrderIsTaken, displayOrderConflictMessage } from "../lib/displayOrder";
 
 const blank = { imageUrl: "", imagePublicId: "", title: "", category: "", displayOrder: 0 };
 export function PortfolioManagerPage() {
@@ -10,10 +11,13 @@ export function PortfolioManagerPage() {
   const [editing, setEditing] = useState(null);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
-  const load = () =>
+  const load = (resetOrder = false) =>
     api
       .get("/admin/portfolio")
-      .then(({ data }) => setItems(data))
+      .then(({ data }) => {
+        setItems(data);
+        if (resetOrder || editing === null) setForm((current) => ({ ...current, displayOrder: nextDisplayOrder(data) }));
+      })
       .catch(() => setMessage("Unable to load portfolio items."));
   useEffect(() => {
     load();
@@ -44,14 +48,18 @@ export function PortfolioManagerPage() {
   async function save(event) {
     event.preventDefault();
     setMessage("");
+    if (displayOrderIsTaken(items, form.displayOrder, editing)) {
+      setMessage(displayOrderConflictMessage);
+      return;
+    }
     try {
       if (editing) await api.put(`/admin/portfolio/${editing}`, form);
       else await api.post("/admin/portfolio", form);
       setForm(blank);
       setEditing(null);
-      load();
-    } catch {
-      setMessage("Unable to save this portfolio item. Check the image URL.");
+      load(true);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Unable to save this portfolio item. Check the image URL.");
     }
   }
   function edit(item) {
@@ -112,7 +120,7 @@ export function PortfolioManagerPage() {
           )}
           <div className="inline-actions">
             <button className="button dark" disabled={uploading}>
-              {editing ? "Save changes" : "Add image"}
+              {editing ? "Save changes" : "Add portfolio item"}
             </button>
             {editing && (
               <button
@@ -120,7 +128,7 @@ export function PortfolioManagerPage() {
                 className="text-button"
                 onClick={() => {
                   setEditing(null);
-                  setForm(blank);
+                  setForm({ ...blank, displayOrder: nextDisplayOrder(items) });
                 }}
               >
                 Cancel edit

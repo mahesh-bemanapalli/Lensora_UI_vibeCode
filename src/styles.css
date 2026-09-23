@@ -285,6 +285,7 @@ h2,
 }
 .booking-section input,
 .booking-section textarea,
+.booking-section select,
 .auth-card input {
   border: 0;
   border-bottom: 1px solid #6e665c;
@@ -304,6 +305,62 @@ h2,
 .form-error {
   color: #c95252;
   margin: 0;
+}
+.packages-section .section-heading > p:last-child {
+  color: #645d53;
+  font-size: 1.1rem;
+}
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.package-card {
+  background: #ece7dd;
+  display: flex;
+  flex-direction: column;
+}
+.package-card > img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.package-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: clamp(24px, 3vw, 38px);
+}
+.package-card h3 {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1.1;
+  margin: 0 0 16px;
+}
+.package-card-body > p:not(.eyebrow) {
+  color: #645d53;
+  margin: 0 0 14px;
+  white-space: pre-line;
+}
+.package-card-body .package-meta {
+  font-size: 0.95rem;
+}
+.package-card-bottom {
+  border-top: 1px solid #cfc6b9;
+  margin-top: auto;
+  padding-top: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.package-card-bottom span {
+  font-family: "Playfair Display", serif;
+  font-size: 1.5rem;
+}
+.package-card-bottom a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .site-footer {
   background: #141310;
@@ -504,7 +561,8 @@ h2,
     font-size: 4.1rem;
   }
   .portfolio-grid,
-  .gear-grid {
+  .gear-grid,
+  .packages-grid {
     grid-template-columns: 1fr;
   }
   .portfolio-card {
@@ -527,6 +585,10 @@ h2,
   }
   .booking-section {
     padding: 80px 24px;
+  }
+  .package-card-bottom {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .footer-inner {
     padding-top: 72px;

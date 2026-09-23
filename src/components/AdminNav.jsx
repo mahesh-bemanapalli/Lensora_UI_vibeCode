@@ -16,6 +16,7 @@ export function AdminNav() {
         <NavLink to="/admin/profile">Profile</NavLink>
         <NavLink to="/admin/portfolio">Portfolio</NavLink>
         <NavLink to="/admin/gear">Gear</NavLink>
+        <NavLink to="/admin/packages">Packages</NavLink>
       </nav>
       <button className="text-button" onClick={logout}>
         Sign out

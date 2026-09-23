@@ -1,4 +1,4 @@
-export function Footer({ photographerName, location }) {
+export function Footer({ photographerName, location, hasPackages }) {
   return (
     <footer className="site-footer">
       <div className="footer-inner">
@@ -15,6 +15,7 @@ export function Footer({ photographerName, location }) {
             <a href="#portfolio">Portfolio</a>
             <a href="#about">About</a>
             <a href="#gear">Gear</a>
+            {hasPackages && <a href="#packages">Packages</a>}
             <a href="#booking">Book a session</a>
           </nav>
         </div>

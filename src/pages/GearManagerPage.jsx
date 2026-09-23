@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { uploadImage } from "../lib/uploads";
 import { AdminNav } from "../components/AdminNav";
+import { nextDisplayOrder, displayOrderIsTaken, displayOrderConflictMessage } from "../lib/displayOrder";
 
 const blank = {
   name: "",
@@ -20,10 +21,13 @@ export function GearManagerPage() {
   const [editing, setEditing] = useState(null);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
-  const load = () =>
+  const load = (resetOrder = false) =>
     api
       .get("/admin/gear")
-      .then(({ data }) => setItems(data))
+      .then(({ data }) => {
+        setItems(data);
+        if (resetOrder || editing === null) setForm((current) => ({ ...current, displayOrder: nextDisplayOrder(data) }));
+      })
       .catch(() => setMessage("Unable to load gear."));
   useEffect(() => {
     load();
@@ -58,14 +62,18 @@ export function GearManagerPage() {
   async function save(event) {
     event.preventDefault();
     setMessage("");
+    if (displayOrderIsTaken(items, form.displayOrder, editing)) {
+      setMessage(displayOrderConflictMessage);
+      return;
+    }
     try {
       if (editing) await api.put(`/admin/gear/${editing}`, form);
       else await api.post("/admin/gear", form);
       setForm(blank);
       setEditing(null);
-      load();
-    } catch {
-      setMessage("Unable to save this gear item. Check the required fields and image URL.");
+      load(true);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Unable to save this gear item. Check the required fields and image URL.");
     }
   }
   function edit(item) {
@@ -162,7 +170,7 @@ export function GearManagerPage() {
                 className="text-button"
                 onClick={() => {
                   setEditing(null);
-                  setForm(blank);
+                  setForm({ ...blank, displayOrder: nextDisplayOrder(items) });
                 }}
               >
                 Cancel edit
@@ -187,6 +195,7 @@ export function GearManagerPage() {
                   {item.name}
                   {item.description && ` — ${item.description}`}
                 </p>
+                <p>Order {item.displayOrder}</p>
                 <button className="text-button" onClick={() => edit(item)}>
                   Edit
                 </button>

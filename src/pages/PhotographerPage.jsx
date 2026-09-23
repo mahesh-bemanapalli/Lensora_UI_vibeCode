@@ -9,6 +9,8 @@ export function PhotographerPage() {
   const [profile, setProfile] = useState();
   const [status, setStatus] = useState("loading");
   const [sending, setSending] = useState(false);
+  const [bookingError, setBookingError] = useState("");
+  const [selectedPackageId, setSelectedPackageId] = useState("");
   useEffect(() => {
     let active = true;
     api
@@ -26,18 +28,26 @@ export function PhotographerPage() {
   }, [slug]);
   async function submitBooking(event) {
     event.preventDefault();
-    const fields = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const fields = new FormData(form);
     setSending(true);
+    setBookingError("");
     try {
       await api.post(`/photographers/${slug}/bookings`, {
         clientName: fields.get("name"),
         clientEmail: fields.get("email"),
         eventDate: fields.get("date"),
         message: fields.get("message") || null,
+        packageId: selectedPackageId ? Number(selectedPackageId) : null,
       });
-      event.currentTarget.reset();
+      form.reset();
+      setSelectedPackageId("");
       setStatus("booked");
-    } catch {
+    } catch (error) {
+      console.error("Unable to send booking inquiry.", error);
+      setBookingError(
+        error.response?.data?.message || "We could not send this inquiry. Please try again.",
+      );
       setStatus("booking-error");
     } finally {
       setSending(false);
@@ -51,7 +61,7 @@ export function PhotographerPage() {
       <section className="hero">
         <div className="hero-image" />
         <div className="hero-overlay" />
-        <Navbar slug={slug} />
+        <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
         <div className="hero-content">
           <p className="eyebrow">{profile.location || "Photography"}</p>
           <h1>{profile.name}</h1>
@@ -114,6 +124,33 @@ export function PhotographerPage() {
           ))}
         </div>
       </section>
+      {profile.packages?.length > 0 && (
+        <section id="packages" className="section packages-section">
+          <div className="section-heading">
+            <p className="eyebrow dark">Experiences</p>
+            <h2>Find your story.</h2>
+            <p>Choose the coverage that fits your occasion. Every inquiry starts a conversation.</p>
+          </div>
+          <div className="packages-grid">
+            {profile.packages.map((item) => (
+              <article className="package-card" key={item.id}>
+                <img src={item.imageUrl} alt="" />
+                <div className="package-card-body">
+                  <p className="eyebrow dark">Photography package</p>
+                  <h3>{item.name}</h3>
+                  <p>{item.description}</p>
+                  {item.coverageHours && <p className="package-meta">Up to {item.coverageHours} hours of coverage</p>}
+                  {item.deliverables && <p className="package-meta">Includes: {item.deliverables}</p>}
+                  <div className="package-card-bottom">
+                    <span>From {new Intl.NumberFormat(undefined, { style: "currency", currency: item.currency }).format(item.price)}</span>
+                    <a href="#booking" onClick={() => setSelectedPackageId(String(item.id))}>Inquire about this package ↗</a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <section id="booking" className="booking-section">
         <div>
           <p className="eyebrow">Let’s create something enduring</p>
@@ -121,6 +158,15 @@ export function PhotographerPage() {
           <p>Share the date and a little about what you have in mind. I’ll be in touch soon.</p>
         </div>
         <form onSubmit={submitBooking}>
+          {profile.packages?.length > 0 && (
+            <label>
+              Package
+              <select value={selectedPackageId} onChange={(event) => setSelectedPackageId(event.target.value)}>
+                <option value="">General inquiry</option>
+                {profile.packages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+          )}
           <label>
             Your name
             <input name="name" required maxLength="120" />
@@ -144,11 +190,11 @@ export function PhotographerPage() {
             <p className="form-success">Thank you — your inquiry has been sent.</p>
           )}
           {status === "booking-error" && (
-            <p className="form-error">We could not send this inquiry. Please try again.</p>
+            <p className="form-error" role="alert">{bookingError}</p>
           )}
         </form>
       </section>
-      <Footer photographerName={profile.name} location={profile.location} />
+      <Footer photographerName={profile.name} location={profile.location} hasPackages={profile.packages?.length > 0} />
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { BookingsPage } from "./pages/BookingsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PortfolioManagerPage } from "./pages/PortfolioManagerPage";
 import { GearManagerPage } from "./pages/GearManagerPage";
+import { PackagesManagerPage } from "./pages/PackagesManagerPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export default function App() {
@@ -41,6 +42,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <GearManagerPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/packages"
+        element={
+          <ProtectedRoute>
+            <PackagesManagerPage />
           </ProtectedRoute>
         }
       />

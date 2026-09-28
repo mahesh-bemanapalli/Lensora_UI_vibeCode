@@ -39,6 +39,8 @@ export function PhotographerPage() {
         eventDate: fields.get("date"),
         message: fields.get("message") || null,
         packageId: selectedPackageId ? Number(selectedPackageId) : null,
+        clientPhone: fields.get("phone") || null,
+        whatsAppOptIn: fields.get("whatsappOptIn") === "on",
       });
       form.reset();
       setSelectedPackageId("");
@@ -174,6 +176,14 @@ export function PhotographerPage() {
           <label>
             Email address
             <input name="email" type="email" required />
+          </label>
+          <label>
+            WhatsApp number (optional, with country code)
+            <input name="phone" type="tel" placeholder="+919876543210" pattern="\+[1-9][0-9]{7,14}" />
+          </label>
+          <label className="booking-opt-in">
+            <input name="whatsappOptIn" type="checkbox" />
+            I agree to receive updates about this inquiry on WhatsApp at the number above.
           </label>
           <label>
             Event date

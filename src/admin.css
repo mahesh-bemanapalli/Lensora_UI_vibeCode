@@ -101,6 +101,106 @@
 .danger {
   color: #a53737;
 }
+.booking-details {
+  flex: 1;
+  min-width: 0;
+}
+.booking-accordion {
+  margin-top: 20px;
+  border-top: 1px solid #e5dfd4;
+}
+.booking-accordion summary {
+  padding: 16px 0 0;
+  cursor: pointer;
+  color: #634b29;
+  font-weight: 600;
+}
+.booking-accordion summary:focus-visible {
+  outline: 2px solid #827562;
+  outline-offset: 4px;
+}
+.booking-accordion-content {
+  padding-top: 8px;
+}
+.booking-accordion .card-actions {
+  margin-top: 24px;
+}
+.follow-up-form {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e5dfd4;
+}
+.follow-up-form h3,
+.notification-history h3 {
+  font-family: "Playfair Display", serif;
+  margin: 0;
+}
+.follow-up-form label {
+  display: grid;
+  gap: 5px;
+  color: #645d53;
+}
+.follow-up-form input,
+.follow-up-form textarea {
+  border: 1px solid #cfc6b9;
+  padding: 8px;
+  background: #fff;
+}
+.follow-up-form button {
+  justify-self: start;
+}
+.amount-pending,
+.payment-summary {
+  font-weight: 600;
+  color: #634b29;
+}
+.payment-summary {
+  margin: -8px 0 20px;
+}
+.notification-history {
+  margin-top: 26px;
+}
+.notification-history p {
+  margin: 8px 0;
+  font-size: 0.88rem;
+}
+.notification-history span {
+  font-weight: 600;
+}
+.crm-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 24px;
+}
+.crm-filter {
+  background: #ece7dd;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  color: #1d1b18;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.crm-filter:hover {
+  border-color: #a99d8c;
+}
+.crm-filter[aria-pressed="true"] {
+  background: #1d1b18;
+  color: #f8f6f1;
+}
+.crm-filter:focus-visible {
+  outline: 2px solid #827562;
+  outline-offset: 3px;
+}
+.crm-filter strong {
+  font-family: "Playfair Display", serif;
+  font-size: 1.5rem;
+  margin-right: 6px;
+}
 .checkbox-label {
   display: flex !important;
   grid-template-columns: auto 1fr;

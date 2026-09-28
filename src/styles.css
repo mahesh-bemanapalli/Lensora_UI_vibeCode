@@ -283,6 +283,17 @@ h2,
   color: #ded6ca;
   font-size: 0.9rem;
 }
+.booking-section .booking-opt-in {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.booking-opt-in input {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 2px;
+}
 .booking-section input,
 .booking-section textarea,
 .booking-section select,
@@ -491,9 +502,6 @@ h2,
 .booking-card {
   background: #fff;
   padding: 28px;
-  display: flex;
-  justify-content: space-between;
-  gap: 30px;
   border: 1px solid #e5dfd4;
 }
 .booking-card h2 {
@@ -524,6 +532,9 @@ h2,
 }
 .status.rejected {
   background: #f2dada;
+}
+.status.confirmed {
+  background: #cbe5d0;
 }
 .card-actions {
   display: flex;

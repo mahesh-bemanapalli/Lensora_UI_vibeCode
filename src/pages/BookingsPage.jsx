@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { AdminNav } from "../components/AdminNav";
+import { EventDateFilter } from "../components/EventDateFilter";
+import { matchesBookingFilters, formatEventDate } from "../lib/bookingFilters";
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
@@ -30,6 +32,26 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
   const [currency, setCurrency] = useState(booking.currency || "INR");
   const [financialMessage, setFinancialMessage] = useState("");
   const [savingFinancials, setSavingFinancials] = useState(false);
+  const [editingAmounts, setEditingAmounts] = useState(false);
+  const [editingFollowUp, setEditingFollowUp] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
+  const latestMessage = [...(booking.notifications || [])].sort((a, b) =>
+    (utcDate(b.createdUtc)?.getTime() || 0) - (utcDate(a.createdUtc)?.getTime() || 0))[0];
+
+  function cancelAmounts() {
+    setAgreedAmount(booking.agreedAmount?.toString() ?? "");
+    setAmountReceived(booking.amountReceived?.toString() ?? "0");
+    setCurrency(booking.currency || "INR");
+    setFinancialMessage("");
+    setEditingAmounts(false);
+  }
+
+  function cancelFollowUp() {
+    setNotes(booking.internalNotes || "");
+    setFollowUp(indianDateTime(booking.followUpUtc));
+    setSaveMessage("");
+    setEditingFollowUp(false);
+  }
 
   useEffect(() => {
     setNotes(booking.internalNotes || "");
@@ -54,6 +76,7 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
     try {
       const saved = await onSaveFinancials(booking.id, { agreedAmount: agreed, amountReceived: received, currency });
       setFinancialMessage(saved ? "Amounts saved." : "Amounts were not saved.");
+      if (saved) setEditingAmounts(false);
     } finally {
       setSavingFinancials(false);
     }
@@ -68,6 +91,7 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
         followUpUtc: followUp ? new Date(`${followUp}:00+05:30`).toISOString() : null,
       });
       setSaveMessage(saved ? "Follow-up saved." : "Follow-up was not saved.");
+      if (saved) setEditingFollowUp(false);
     } finally {
       setSaving(false);
     }
@@ -87,8 +111,18 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
             {booking.packageName && <p>Package: {booking.packageName}</p>}
             {booking.message && <blockquote>{booking.message}</blockquote>}
 
-        <form className="follow-up-form" onSubmit={saveFinancials}>
-          <h3>Booking amount</h3>
+        <section className="booking-summary-section">
+          <div className="booking-section-heading">
+            <h3>Booking amount</h3>
+            {!editingAmounts && <button type="button" className="booking-section-action" onClick={() => { setFinancialMessage(""); setEditingAmounts(true); }}>Update amount</button>}
+          </div>
+          {!editingAmounts ? <>
+            <dl className="booking-amount-summary">
+              <div><dt>Agreed amount</dt><dd>{booking.agreedAmount == null ? "Not agreed yet" : money(booking.agreedAmount, booking.currency || "INR")}</dd></div>
+              <div><dt>Received to date</dt><dd>{booking.amountReceived == null ? "Not recorded" : money(booking.amountReceived, booking.currency || "INR")}</dd></div>
+            </dl>
+            {booking.pendingAmount != null && <p className="amount-pending booking-balance">Pending to collect: {money(booking.pendingAmount, booking.currency || "INR")}</p>}
+          </> : <form className="follow-up-form" onSubmit={saveFinancials}>
           <p>Record the price agreed with this customer and the total received so far. Package price is only a starting point.</p>
           <label>Agreed amount
             <input type="number" min="0" max="9999999999.99" step="0.01" value={agreedAmount} onChange={(event) => { setAgreedAmount(event.target.value); setFinancialMessage(""); }} placeholder="Not agreed yet" />
@@ -101,11 +135,20 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
           </label>
           {booking.status === "Confirmed" && <p className="amount-pending">Pending to collect: {booking.pendingAmount === null ? "Set agreed amount" : money(booking.pendingAmount, booking.currency)}</p>}
           <button type="submit" className="text-button" disabled={savingFinancials}>{savingFinancials ? "Saving…" : "Save amounts"}</button>
-          {financialMessage && <p role="status">{financialMessage}</p>}
-        </form>
+          <button type="button" className="text-button" disabled={savingFinancials} onClick={cancelAmounts}>Cancel</button>
+        </form>}
+        {financialMessage && <p role="status">{financialMessage}</p>}
+        </section>
 
-        <form className="follow-up-form" onSubmit={saveFollowUp}>
-          <h3>Follow-up</h3>
+        <section className="booking-summary-section">
+          <div className="booking-section-heading">
+            <h3>Follow-up</h3>
+            {!editingFollowUp && <button type="button" className="booking-section-action" onClick={() => { setSaveMessage(""); setEditingFollowUp(true); }}>Manage follow-ups</button>}
+          </div>
+          {!editingFollowUp ? <div className="booking-follow-up-summary">
+            <p><strong>Next follow-up (IST)</strong><br />{indianDateTime(booking.followUpUtc) ? utcDate(booking.followUpUtc).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" }) : "No follow-up scheduled."}</p>
+            <p className="booking-private-notes"><strong>Private notes</strong><br />{booking.internalNotes || "No notes added."}</p>
+          </div> : <form className="follow-up-form" onSubmit={saveFollowUp}>
           <label>Next follow-up (IST)
             <input type="datetime-local" value={followUp} onChange={(event) => { setFollowUp(event.target.value); setSaveMessage(""); }} />
           </label>
@@ -113,19 +156,25 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
             <textarea rows="3" maxLength="4000" value={notes} onChange={(event) => { setNotes(event.target.value); setSaveMessage(""); }} placeholder="Call outcome, next steps, or questions to ask" />
           </label>
           <button type="submit" className="text-button" disabled={saving}>{saving ? "Saving…" : "Save follow-up"}</button>
-          {saveMessage && <p role="status">{saveMessage}</p>}
-        </form>
+          <button type="button" className="text-button" disabled={saving} onClick={cancelFollowUp}>Cancel</button>
+        </form>}
+        {saveMessage && <p role="status">{saveMessage}</p>}
+        </section>
 
-        <div className="notification-history">
-          <h3>Message history</h3>
-          {booking.notifications?.length ? booking.notifications.map((item) => (
+        <section className="booking-summary-section notification-history">
+          <div className="booking-section-heading">
+            <h3>Message history</h3>
+            {!!booking.notifications?.length && <button type="button" className="booking-section-action" aria-expanded={showMessages} onClick={() => setShowMessages(!showMessages)}>{showMessages ? "Close history" : "View messages"}</button>}
+          </div>
+          {!showMessages && latestMessage && <p>Latest: {latestMessage.channel} · {latestMessage.eventType.replace(/([a-z])([A-Z])/g, "$1 $2")} · {latestMessage.status}</p>}
+          {!showMessages ? <p>{booking.notifications?.length ? `${booking.notifications.length} message${booking.notifications.length === 1 ? "" : "s"}${booking.notifications.some((item) => item.status === "Failed") ? ` · ${booking.notifications.filter((item) => item.status === "Failed").length} failed` : ""}` : "No messages queued."}</p> : booking.notifications?.length ? booking.notifications.map((item) => (
             <p key={item.id}>
               <span>{item.channel}</span> · {item.eventType.replace(/([a-z])([A-Z])/g, "$1 $2")} · {item.status}
               {item.lastError && <small> — {item.lastError}</small>}
               {item.status === "Failed" && <button className="text-button" onClick={() => onRetryNotification(booking.id, item.id)}>Retry</button>}
             </p>
           )) : <p>No messages queued.</p>}
-        </div>
+        </section>
         <div className="card-actions">
           {booking.status === "Pending" && <>
             <button onClick={() => onStatus(booking.id, "Accepted")}>Accept inquiry</button>
@@ -146,6 +195,7 @@ export function BookingsPage() {
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
   const [activeFilter, setActiveFilter] = useState("all");
+  const [eventDates, setEventDates] = useState({ mode: "range", start: "", end: "" });
   const scheduledFollowUps = bookings.filter((booking) => {
     const date = utcDate(booking.followUpUtc);
     return date && !Number.isNaN(date.getTime());
@@ -159,25 +209,18 @@ export function BookingsPage() {
     return totals;
   }, {});
   const filterOptions = [
-    { id: "all", label: "All inquiries", count: bookings.length },
-    { id: "pending", label: "New inquiries", count: bookings.filter((booking) => booking.status === "Pending").length },
+    { id: "all", label: "All enquiries", count: bookings.length },
+    { id: "pending", label: "New enquiries", count: bookings.filter((booking) => booking.status === "Pending").length },
     { id: "accepted", label: "Accepted", count: bookings.filter((booking) => booking.status === "Accepted").length },
     { id: "confirmed", label: "Confirmed", count: bookings.filter((booking) => booking.status === "Confirmed").length },
     { id: "payment-pending", label: "Payment pending", count: paymentPending.length },
     { id: "rejected", label: "Declined", count: bookings.filter((booking) => booking.status === "Rejected").length },
-    { id: "due", label: "Follow-ups due", count: followUpsDue },
-    { id: "upcoming", label: "Upcoming follow-ups", count: scheduledFollowUps.length - followUpsDue },
   ];
-  const visibleBookings = bookings.filter((booking) => {
-    if (activeFilter === "all") return true;
-    if (activeFilter === "payment-pending") return booking.status === "Confirmed" && booking.pendingAmount > 0;
-    if (activeFilter === "due" || activeFilter === "upcoming") {
-      const date = utcDate(booking.followUpUtc);
-      if (!date || Number.isNaN(date.getTime())) return false;
-      return activeFilter === "due" ? date.getTime() <= now : date.getTime() > now;
-    }
-    return booking.status.toLowerCase() === activeFilter;
-  });
+  const visibleBookings = bookings.filter((booking) => matchesBookingFilters(booking, {
+    enquiry: ["due", "upcoming"].includes(activeFilter) ? "all" : activeFilter,
+    followUp: ["due", "upcoming"].includes(activeFilter) ? activeFilter : "all",
+    ...eventDates,
+  }, now));
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
@@ -224,6 +267,7 @@ export function BookingsPage() {
       return true;
     } catch {
       setError("Follow-up saved, but the booking list could not refresh.");
+      setBookings((items) => items.map((item) => item.id === id ? { ...item, ...details } : item));
       return true;
     }
   }
@@ -255,27 +299,35 @@ export function BookingsPage() {
       <AdminNav />
       <section>
         <p className="eyebrow dark">Studio dashboard</p>
-        <h1>Booking inquiries</h1>
+        <h1>Booking enquiries</h1>
         <p className="manager-intro">Review inquiries, plan your next contact, and track customer messages.</p>
-        <nav className="crm-summary" aria-label="Filter booking inquiries">
-          {filterOptions.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              className="crm-filter"
-              aria-pressed={activeFilter === option.id}
-              onClick={() => setActiveFilter(option.id)}
-            >
-              <strong>{option.count}</strong> {option.label}
-            </button>
-          ))}
-        </nav>
+        <div className="booking-filters" role="group" aria-label="Filter booking enquiries">
+          <label className="booking-filter-label">Enquiries &amp; follow-ups
+            <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value)}>
+              <option value="all">All enquiries ({bookings.length})</option>
+              <optgroup label="Enquiries">
+                {filterOptions.filter((option) => option.id !== "all").map((option) => <option key={option.id} value={option.id}>{option.label} ({option.count})</option>)}
+              </optgroup>
+              <optgroup label="Follow-ups">
+                <option value="due">Follow-ups due ({followUpsDue})</option>
+                <option value="upcoming">Upcoming follow-ups ({scheduledFollowUps.length - followUpsDue})</option>
+              </optgroup>
+            </select>
+          </label>
+          <EventDateFilter value={eventDates} onChange={setEventDates} />
+        </div>
+        <div className="booking-filter-results">
+          <p role="status">{visibleBookings.length} event{visibleBookings.length === 1 ? "" : "s"}{eventDates.start ? ` · ${formatEventDate(eventDates.start)}${eventDates.end && eventDates.end !== eventDates.start ? ` – ${formatEventDate(eventDates.end)}` : ""}` : ""}</p>
+          <button type="button" className="text-button" onClick={() => {
+            setActiveFilter("all"); setEventDates({ mode: "range", start: "", end: "" });
+          }}>Clear filters</button>
+        </div>
         <p className="payment-summary">Confirmed balances to collect: {Object.entries(outstandingByCurrency).length ? Object.entries(outstandingByCurrency).map(([code, amount]) => money(amount, code)).join(" · ") : money(0)}{confirmedUnpriced > 0 ? ` · ${confirmedUnpriced} confirmed booking${confirmedUnpriced === 1 ? "" : "s"} missing an agreed amount` : ""}</p>
         <button className="text-button" onClick={() => load().catch(() => setError("Unable to refresh inquiries."))}>Refresh messages</button>
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="booking-list">
           {visibleBookings.length === 0
-            ? <p className="empty">{bookings.length === 0 ? "No booking inquiries yet." : `No ${filterOptions.find((option) => option.id === activeFilter)?.label.toLowerCase()} to show.`}</p>
+            ? <p className="empty">{bookings.length === 0 ? "No booking enquiries yet." : "No events match these filters. Change the dates or clear your filters."}</p>
             : visibleBookings.map((booking) => (
               <BookingCard key={booking.id} booking={booking} onStatus={setStatus} onSaveFollowUp={saveFollowUp} onSaveFinancials={saveFinancials} onRetryNotification={retryNotification} />
             ))}

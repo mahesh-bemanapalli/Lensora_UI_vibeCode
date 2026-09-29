@@ -171,13 +171,13 @@ function BookingCard({ booking, onStatus, onSaveFollowUp, onSaveFinancials, onRe
             <p key={item.id}>
               <span>{item.channel}</span> · {item.eventType.replace(/([a-z])([A-Z])/g, "$1 $2")} · {item.status}
               {item.lastError && <small> — {item.lastError}</small>}
-              {item.status === "Failed" && <button className="text-button" onClick={() => onRetryNotification(booking.id, item.id)}>Retry</button>}
+              {item.status === "Failed" && item.eventType !== "Accepted" && <button className="text-button" onClick={() => onRetryNotification(booking.id, item.id)}>Retry</button>}
             </p>
           )) : <p>No messages queued.</p>}
         </section>
         <div className="card-actions">
           {booking.status === "Pending" && <>
-            <button onClick={() => onStatus(booking.id, "Accepted")}>Accept inquiry</button>
+            <button onClick={() => onStatus(booking.id, "Confirmed")}>Confirm booking</button>
             <button className="reject" onClick={() => onStatus(booking.id, "Rejected")}>Decline</button>
           </>}
           {booking.status === "Accepted" &&
@@ -211,7 +211,6 @@ export function BookingsPage() {
   const filterOptions = [
     { id: "all", label: "All enquiries", count: bookings.length },
     { id: "pending", label: "New enquiries", count: bookings.filter((booking) => booking.status === "Pending").length },
-    { id: "accepted", label: "Accepted", count: bookings.filter((booking) => booking.status === "Accepted").length },
     { id: "confirmed", label: "Confirmed", count: bookings.filter((booking) => booking.status === "Confirmed").length },
     { id: "payment-pending", label: "Payment pending", count: paymentPending.length },
     { id: "rejected", label: "Declined", count: bookings.filter((booking) => booking.status === "Rejected").length },

@@ -8,9 +8,12 @@ import { GearManagerPage } from "./pages/GearManagerPage";
 import { PackagesManagerPage } from "./pages/PackagesManagerPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
+import { EventLogsPage } from "./pages/EventLogsPage";
+
 export default function App() {
   return (
     <Routes>
+      <Route path="/admin/event-logs" element={<ProtectedRoute><EventLogsPage /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/mahesh" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route

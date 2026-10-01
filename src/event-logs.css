@@ -1,0 +1,33 @@
+.event-log-page { max-width: 1450px; margin: 36px auto; padding: 0 24px 48px; color: #202b32; }
+.event-log-heading, .event-log-status { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.event-log-heading h1 { margin-bottom: 8px; }
+.event-log-heading p, .event-log-status { color: #52616a; }
+.event-log-filters { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; background: #fff; padding: 22px; border: 1px solid #dce2e5; border-radius: 12px; margin: 24px 0 16px; align-items: end; }
+.event-log-filters label { display: grid; gap: 6px; font-size: 14px; }
+.event-log-filters input, .event-log-filters select { width: 100%; min-width: 0; padding: 10px; border: 1px solid #bdc9d0; border-radius: 6px; background: white; color: #202b32; }
+.event-log-page button { padding: 9px 14px; border: 1px solid #9aaeb9; border-radius: 6px; background: #fff; color: #173d50; cursor: pointer; }
+.event-log-page button:disabled { opacity: .5; cursor: wait; }
+.event-log-page button:hover:not(:disabled) { background: #edf4f7; }
+.event-log-status { font-size: 13px; margin-bottom: 16px; }
+.event-log-status input { width: auto; margin-right: 6px; }
+.event-log-table-wrap { overflow-x: auto; border: 1px solid #dce2e5; border-radius: 10px; background: white; }
+.event-log-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.event-log-table th { background: #eef3f5; padding: 13px; white-space: nowrap; }
+.event-log-table td { padding: 13px; border-top: 1px solid #e3e9ec; vertical-align: top; }
+.event-log-table td:nth-child(3) { min-width: 250px; overflow-wrap: anywhere; }
+.event-log-table td:nth-child(3) div { color: #52616a; margin-top: 5px; }
+.event-level { display: inline-block; border-radius: 20px; padding: 4px 8px; background: #e7f0f7; color: #234b6b; }
+.level-error,.level-critical { background: #fce5e5; color: #942828; }
+.level-warning { background: #fff0cf; color: #795000; }
+.event-log-error { padding: 16px; background: #fce5e5; color: #942828; border-radius: 8px; }
+.event-log-empty { padding: 36px; text-align: center; border: 1px dashed #bdc9d0; border-radius: 10px; }
+.event-log-more { margin-top: 18px; }
+.event-log-detail { margin-top: 24px; padding: 24px; background: white; border: 1px solid #bdc9d0; border-radius: 12px; overflow-wrap: anywhere; }
+.event-log-detail dt { font-weight: 600; margin-top: 14px; }
+.event-log-detail dd { margin: 6px 0 0; }
+.event-log-detail pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #eef3f5; padding: 16px; border-radius: 8px; }
+@media(max-width: 750px) { .event-log-filters { grid-template-columns: 1fr; } .event-log-page { padding: 0 12px 32px; } }
+/* Native modal keeps focus inside and makes the background inert. */
+dialog.event-log-detail { position: fixed; inset: 0; margin: auto; width: min(900px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); box-sizing: border-box; overflow-y: auto; color: #202b32; box-shadow: 0 24px 80px #102a4350; }
+dialog.event-log-detail::backdrop { background: #102a4380; }
+dialog.event-log-detail .event-log-heading { position: sticky; top: -24px; background: white; padding: 12px 0; z-index: 1; }

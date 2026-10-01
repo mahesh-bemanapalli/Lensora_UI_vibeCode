@@ -1,2 +1,5 @@
 # Generated production build output
 dist/
+
+# Local event log build verification
+event-logs-build-check/

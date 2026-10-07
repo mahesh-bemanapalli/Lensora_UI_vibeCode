@@ -56,6 +56,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/:slug/portfolio/:categorySlug" element={<PhotographerPage />} />
       <Route path="/:slug" element={<PhotographerPage />} />
     </Routes>
   );

@@ -97,7 +97,8 @@ export function PortfolioManagerPage() {
             </label>
             <label>
               Category
-              <input name="category" value={form.category ?? ""} onChange={change} />
+              <input name="category" list="portfolio-category-options" value={form.category ?? ""} onChange={change} placeholder="Choose or create a category" />
+              <datalist id="portfolio-category-options">{[...new Set(items.map((item) => item.category?.trim()).filter(Boolean))].sort().map((category) => <option key={category} value={category} />)}</datalist>
             </label>
             <label>
               Display order

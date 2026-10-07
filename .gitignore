@@ -3,3 +3,5 @@ dist/
 
 # Local event log build verification
 event-logs-build-check/
+
+category-build-check/

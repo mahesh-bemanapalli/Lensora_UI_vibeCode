@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 
 export function PhotographerPage() {
-  const { slug } = useParams();
+  const { slug, categorySlug } = useParams();
   const [profile, setProfile] = useState();
   const [status, setStatus] = useState("loading");
   const [sending, setSending] = useState(false);
@@ -26,6 +26,12 @@ export function PhotographerPage() {
       active = false;
     };
   }, [slug]);
+  const selectedCategory = profile?.portfolioCategories?.find((category) => category.slug === categorySlug);
+  const heroImage = profile?.profileImageUrl || profile?.portfolio?.[0]?.imageUrl;
+  const portfolioItems = categorySlug
+    ? (selectedCategory ? profile.portfolio.filter((item) => item.category?.trim().toLocaleLowerCase() === selectedCategory.name.trim().toLocaleLowerCase()) : [])
+    : profile?.portfolio ?? [];
+
   async function submitBooking(event) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -58,27 +64,58 @@ export function PhotographerPage() {
   if (status === "loading") return <main className="state">Loading portfolio…</main>;
   if (status === "missing")
     return <main className="state">This photographer could not be found.</main>;
+  if (categorySlug) return (
+    <main className="portfolio-inner-page">
+      <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
+      <section className="section">
+        <p className="eyebrow dark">{profile.name} · Selected work</p>
+        <h1>{selectedCategory?.name || "Portfolio category not found"}</h1>
+        <Link className="portfolio-back-link" to={`/${slug}#portfolio`}>← All portfolio categories</Link>
+        {selectedCategory ? <div className="portfolio-grid portfolio-inner-grid">
+          {portfolioItems.map((item) => <article className="portfolio-card" key={item.id}>
+            <img src={item.imageUrl} alt={item.title || "Portfolio photograph"} />
+            <div><span>{item.category}</span><h3>{item.title}</h3></div>
+          </article>)}
+        </div> : <p>This portfolio category could not be found.</p>}
+      </section>
+      <Footer photographerName={profile.name} location={profile.location} hasPackages={profile.packages?.length > 0} />
+    </main>
+  );
   return (
     <main id="top">
-      <section className="hero">
-        <div className="hero-image" />
-        <div className="hero-overlay" />
-        <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
+      <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
+      <section className="hero" aria-labelledby="hero-title">
+        {heroImage && (
+          <img
+            className="hero-image"
+            src={heroImage}
+            alt=""
+            fetchPriority="high"
+            onError={(event) => event.currentTarget.remove()}
+          />
+        )}
+        <div className="hero-overlay" aria-hidden="true" />
         <div className="hero-content">
-          <p className="eyebrow">{profile.location || "Photography"}</p>
-          <h1>{profile.name}</h1>
-          <p className="hero-copy">Capturing real moments with a thoughtful, cinematic eye.</p>
-          <div className="hero-actions">
-            <a className="button light" href="#portfolio">
-              View portfolio
-            </a>
-            <a className="button ghost" href="#booking">
-              Book a session
-            </a>
+          <div className="hero-copy-block">
+            <p className="eyebrow hero-location">
+              <span className="hero-location-mark" aria-hidden="true" />
+              {profile.location ? `Photographer · ${profile.location}` : "Photographer & visual storyteller"}
+            </p>
+            <h1 id="hero-title">{profile.name}</h1>
+            <p className="hero-copy">{profile.bio}</p>
+            <div className="hero-actions">
+              <a className="button light" href="#portfolio">
+                <span>Explore the work</span><span aria-hidden="true">↗</span>
+              </a>
+              <a className="button ghost" href="#booking">
+                Start a conversation
+              </a>
+            </div>
           </div>
         </div>
         <div className="hero-note">
-          SCROLL TO EXPLORE <span>↓</span>
+          <span className="hero-note-line" aria-hidden="true" />
+          <span>Scroll to explore</span>
         </div>
       </section>
       <section id="portfolio" className="section">
@@ -86,19 +123,14 @@ export function PhotographerPage() {
           <p className="eyebrow dark">Selected work</p>
           <h2>Stories worth returning to.</h2>
         </div>
-        <div className="portfolio-grid">
-          {profile.portfolio.map((item) => (
-            <article className="portfolio-card" key={item.id}>
-              <img src={item.imageUrl} alt={item.title || "Portfolio photograph"} />
-              <div>
-                <span>{item.category}</span>
-                <h3>{item.title}</h3>
-              </div>
-            </article>
-          ))}
+        <div className="portfolio-category-grid">
+          {(profile.portfolioCategories || []).map((category) => <Link className="portfolio-category-card" key={category.slug} to={`/${slug}/portfolio/${category.slug}`}>
+            <img src={category.coverImageUrl} alt="" />
+            <div><span>{category.itemCount} photographs</span><h3>{category.name}</h3></div>
+          </Link>)}
+          {!(profile.portfolioCategories || []).length && <p>No portfolio categories yet.</p>}
         </div>
-      </section>
-      <section id="about" className="section split about">
+      </section>      <section id="about" className="section split about">
         <p className="eyebrow dark">About</p>
         <div>
           <h2>Photography with presence and purpose.</h2>

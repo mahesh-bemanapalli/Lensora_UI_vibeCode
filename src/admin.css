@@ -22,6 +22,94 @@
   max-width: 640px;
   margin: 16px 0 32px;
 }
+.hero-focal-editor {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  padding: 22px;
+  background: #f2eee7;
+}
+.hero-focal-caption {
+  margin: 0 0 10px;
+  color: #645d53;
+  font: 500 0.68rem "DM Mono", monospace;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.hero-focal-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  background: #37332e;
+  color: #fff;
+}
+.hero-focal-preview > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.hero-focal-empty {
+  display: grid;
+  height: 100%;
+  padding: 24px;
+  place-items: center;
+  text-align: center;
+  color: #ded6ca;
+}
+.hero-focal-preview-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(17, 16, 14, 0.76), transparent 62%);
+  pointer-events: none;
+}
+.hero-focal-preview-copy {
+  position: absolute;
+  right: 16px;
+  bottom: 18px;
+  left: 16px;
+  display: grid;
+  gap: 5px;
+  pointer-events: none;
+}
+.hero-focal-preview-copy span {
+  font: 500 0.56rem "DM Mono", monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.hero-focal-preview-copy strong {
+  font: 500 1.55rem/1.05 "Playfair Display", serif;
+  overflow-wrap: anywhere;
+}
+.hero-focal-controls {
+  display: grid;
+  gap: 22px;
+}
+.hero-focal-controls > p {
+  max-width: 42ch;
+  margin: 0;
+  color: #645d53;
+}
+.hero-focal-controls label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px 14px;
+}
+.hero-focal-controls output {
+  color: #746b5e;
+  font-variant-numeric: tabular-nums;
+}
+.editor-form .hero-focal-controls input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  accent-color: #72542f;
+  cursor: pointer;
+}
 .editor-form {
   background: #fff;
   padding: 30px;
@@ -283,6 +371,12 @@
   .form-grid,
   .content-grid {
     grid-template-columns: 1fr;
+  }
+  .hero-focal-editor {
+    grid-template-columns: 1fr;
+  }
+  .hero-focal-preview {
+    width: min(100%, 230px);
   }
 }
 .booking-filters {

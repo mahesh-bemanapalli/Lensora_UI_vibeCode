@@ -10,6 +10,8 @@ const emptyProfile = {
   location: "",
   profileImageUrl: "",
   profileImagePublicId: "",
+  heroFocalX: 50,
+  heroFocalY: 50,
 };
 export function ProfilePage() {
   const [form, setForm] = useState(emptyProfile);
@@ -23,7 +25,12 @@ export function ProfilePage() {
       .catch(() => setMessage("Unable to load your profile."));
   }, []);
   const change = (event) =>
-    setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+    setForm((current) => ({
+      ...current,
+      [event.target.name]: ["heroFocalX", "heroFocalY"].includes(event.target.name)
+        ? Number(event.target.value)
+        : event.target.value,
+    }));
   async function upload(event) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -91,7 +98,7 @@ export function ProfilePage() {
               />
             </label>
             <label>
-              Profile image URL
+              Hero cover image URL
               <input
                 name="profileImageUrl"
                 type="url"
@@ -101,13 +108,56 @@ export function ProfilePage() {
             </label>
           </div>
           <label className="file-label">
-            Upload profile image
+            Upload hero cover image
             <input type="file" accept="image/*" onChange={upload} disabled={uploading} />
-            <span>{uploading ? "Uploading image…" : "Choose an image"}</span>
+            <span>{uploading ? "Uploading image…" : "Choose a cover image"}</span>
           </label>
-          {form.profileImageUrl && (
-            <img className="upload-preview" src={form.profileImageUrl} alt="Profile preview" />
-          )}
+          <div className="hero-focal-editor">
+            <div>
+              <p className="hero-focal-caption">Mobile hero preview</p>
+              <div className="hero-focal-preview">
+                {form.profileImageUrl ? (
+                  <img
+                    src={form.profileImageUrl}
+                    alt=""
+                    style={{ objectPosition: `${form.heroFocalX}% ${form.heroFocalY}%` }}
+                  />
+                ) : (
+                  <div className="hero-focal-empty">Upload a cover image to preview the crop.</div>
+                )}
+                <div className="hero-focal-preview-shade" />
+                <div className="hero-focal-preview-copy">
+                  <span>{form.location || "Photographer"}</span>
+                  <strong>{form.name || "Your studio name"}</strong>
+                </div>
+              </div>
+            </div>
+            <div className="hero-focal-controls">
+              <p>Adjust the image position until your subject stays in frame on a phone.</p>
+              <label>
+                Horizontal position <output>{form.heroFocalX}%</output>
+                <input
+                  name="heroFocalX"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={form.heroFocalX}
+                  onChange={change}
+                />
+              </label>
+              <label>
+                Vertical position <output>{form.heroFocalY}%</output>
+                <input
+                  name="heroFocalY"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={form.heroFocalY}
+                  onChange={change}
+                />
+              </label>
+            </div>
+          </div>
           <label>
             Biography
             <textarea

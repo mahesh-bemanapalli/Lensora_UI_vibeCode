@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { ResponsiveImage } from "../components/ResponsiveImage";
 
 export function PhotographerPage() {
   const { slug, categorySlug } = useParams();
@@ -26,10 +27,18 @@ export function PhotographerPage() {
       active = false;
     };
   }, [slug]);
-  const selectedCategory = profile?.portfolioCategories?.find((category) => category.slug === categorySlug);
+  const selectedCategory = profile?.portfolioCategories?.find(
+    (category) => category.slug === categorySlug,
+  );
   const heroImage = profile?.profileImageUrl || profile?.portfolio?.[0]?.imageUrl;
   const portfolioItems = categorySlug
-    ? (selectedCategory ? profile.portfolio.filter((item) => item.category?.trim().toLocaleLowerCase() === selectedCategory.name.trim().toLocaleLowerCase()) : [])
+    ? selectedCategory
+      ? (profile?.portfolio ?? []).filter(
+          (item) =>
+            item.category?.trim().toLocaleLowerCase() ===
+            selectedCategory.name.trim().toLocaleLowerCase(),
+        )
+      : []
     : profile?.portfolio ?? [];
 
   async function submitBooking(event) {
@@ -73,7 +82,11 @@ export function PhotographerPage() {
         <Link className="portfolio-back-link" to={`/${slug}#portfolio`}>← All portfolio categories</Link>
         {selectedCategory ? <div className="portfolio-grid portfolio-inner-grid">
           {portfolioItems.map((item) => <article className="portfolio-card" key={item.id}>
-            <img src={item.imageUrl} alt={item.title || "Portfolio photograph"} />
+            <ResponsiveImage
+              src={item.imageUrl}
+              alt={item.title || "Portfolio photograph"}
+              sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+            />
             <div><span>{item.category}</span><h3>{item.title}</h3></div>
           </article>)}
         </div> : <p>This portfolio category could not be found.</p>}
@@ -86,11 +99,18 @@ export function PhotographerPage() {
       <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
       <section className="hero" aria-labelledby="hero-title">
         {heroImage && (
-          <img
+          <ResponsiveImage
             className="hero-image"
             src={heroImage}
             alt=""
             fetchPriority="high"
+            loading="eager"
+            fallbackWidth={1600}
+            widths={[640, 960, 1280, 1600, 2000, 2400]}
+            sizes="100vw"
+            style={{
+              objectPosition: `${profile.heroFocalX ?? 50}% ${profile.heroFocalY ?? 50}%`,
+            }}
             onError={(event) => event.currentTarget.remove()}
           />
         )}
@@ -125,7 +145,11 @@ export function PhotographerPage() {
         </div>
         <div className="portfolio-category-grid">
           {(profile.portfolioCategories || []).map((category) => <Link className="portfolio-category-card" key={category.slug} to={`/${slug}/portfolio/${category.slug}`}>
-            <img src={category.coverImageUrl} alt="" />
+            <ResponsiveImage
+              src={category.coverImageUrl}
+              alt=""
+              sizes="(max-width: 750px) 100vw, 33vw"
+            />
             <div><span>{category.itemCount} photographs</span><h3>{category.name}</h3></div>
           </Link>)}
           {!(profile.portfolioCategories || []).length && <p>No portfolio categories yet.</p>}
@@ -148,7 +172,13 @@ export function PhotographerPage() {
         <div className="gear-grid">
           {profile.gear.map((item) => (
             <article className="gear-card" key={item.id}>
-              {item.imageUrl && <img src={item.imageUrl} alt="" />}
+              {item.imageUrl && (
+                <ResponsiveImage
+                  src={item.imageUrl}
+                  alt=""
+                  sizes="(max-width: 700px) 100vw, 33vw"
+                />
+              )}
               <p>{item.category}</p>
               <h3>
                 {item.brand} {item.model}
@@ -168,7 +198,11 @@ export function PhotographerPage() {
           <div className="packages-grid">
             {profile.packages.map((item) => (
               <article className="package-card" key={item.id}>
-                <img src={item.imageUrl} alt="" />
+                <ResponsiveImage
+                  src={item.imageUrl}
+                  alt=""
+                  sizes="(max-width: 700px) 100vw, 50vw"
+                />
                 <div className="package-card-body">
                   <p className="eyebrow dark">Photography package</p>
                   <h3>{item.name}</h3>

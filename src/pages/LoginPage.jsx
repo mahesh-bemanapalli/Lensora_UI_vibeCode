@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import { currentRole } from "../lib/auth";
 
 export function LoginPage() {
   const [error, setError] = useState("");
@@ -19,8 +20,7 @@ export function LoginPage() {
         { email: fields.get("email"), password: fields.get("password") },
       );
       localStorage.setItem("lensora_token", data.token);
-      navigate(location.state?.from ?? "/admin/bookings", { replace: true });
-      console.log("data.", data);
+      navigate(location.state?.from ?? (currentRole() === "SuperAdmin" ? "/platform/photographers" : "/admin/bookings"), { replace: true });
     } catch {
       setError("Invalid email or password.");
     } finally {

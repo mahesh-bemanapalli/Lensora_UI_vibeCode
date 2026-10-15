@@ -9,11 +9,19 @@ import { PackagesManagerPage } from "./pages/PackagesManagerPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 import { EventLogsPage } from "./pages/EventLogsPage";
+import { PlatformPhotographersPage } from "./pages/PlatformPhotographersPage";
+import { RegisterPhotographerPage } from "./pages/RegisterPhotographerPage";
+import { MediaLibraryPage } from "./pages/MediaLibraryPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/admin/event-logs" element={<ProtectedRoute><EventLogsPage /></ProtectedRoute>} />
+      <Route path="/admin/media" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
+      <Route path="/platform/photographers" element={<ProtectedRoute role="SuperAdmin"><PlatformPhotographersPage /></ProtectedRoute>} />
+      <Route path="/platform/photographers/new" element={<ProtectedRoute role="SuperAdmin"><RegisterPhotographerPage /></ProtectedRoute>} />
+      <Route path="/platform/photographers/:slug/preview" element={<ProtectedRoute role="SuperAdmin"><PhotographerPage preview /></ProtectedRoute>} />
+      <Route path="/platform/photographers/:slug/preview/portfolio/:categorySlug" element={<ProtectedRoute role="SuperAdmin"><PhotographerPage preview /></ProtectedRoute>} />
+      <Route path="/admin/event-logs" element={<ProtectedRoute role="SuperAdmin"><EventLogsPage /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/mahesh" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route

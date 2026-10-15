@@ -5,3 +5,10 @@ dist/
 event-logs-build-check/
 
 category-build-check/
+
+# Local dependencies, credentials and verification output
+node_modules/
+.env
+.env.local
+.env.*.local
+*-check/

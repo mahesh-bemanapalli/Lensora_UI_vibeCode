@@ -1,299 +1,47 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import api from "../lib/api";
-import { Navbar } from "../components/Navbar";
-import { Footer } from "../components/Footer";
-import { ResponsiveImage } from "../components/ResponsiveImage";
+import { useEffect } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { usePhotographerSite } from "../website/hooks/usePhotographerSite";
+import { useBookingInquiry } from "../website/hooks/useBookingInquiry";
+import { resolveWebsiteTemplate } from "../website/templates/registry";
+import { TemplatePreview } from "../website/components/TemplatePreview";
 
-export function PhotographerPage() {
+export function PhotographerPage({ preview = false }) {
   const { slug, categorySlug } = useParams();
-  const [profile, setProfile] = useState();
-  const [status, setStatus] = useState("loading");
-  const [sending, setSending] = useState(false);
-  const [bookingError, setBookingError] = useState("");
-  const [selectedPackageId, setSelectedPackageId] = useState("");
-  useEffect(() => {
-    let active = true;
-    api
-      .get(`/photographers/${slug}`)
-      .then(({ data }) => {
-        if (active) {
-          setProfile(data);
-          setStatus("ready");
-        }
-      })
-      .catch(() => active && setStatus("missing"));
-    return () => {
-      active = false;
-    };
-  }, [slug]);
-  const selectedCategory = profile?.portfolioCategories?.find(
-    (category) => category.slug === categorySlug,
-  );
-  const heroImage = profile?.profileImageUrl || profile?.portfolio?.[0]?.imageUrl;
-  const portfolioItems = categorySlug
-    ? selectedCategory
-      ? (profile?.portfolio ?? []).filter(
-          (item) =>
-            item.category?.trim().toLocaleLowerCase() ===
-            selectedCategory.name.trim().toLocaleLowerCase(),
-        )
-      : []
-    : profile?.portfolio ?? [];
+  // Clear the previous photographer's content and inquiry state when the slug changes.
+  return <PhotographerWebsite key={`${slug}-${preview}`} slug={slug} categorySlug={categorySlug} preview={preview} />;
+}
 
-  async function submitBooking(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const fields = new FormData(form);
-    setSending(true);
-    setBookingError("");
-    try {
-      await api.post(`/photographers/${slug}/bookings`, {
-        clientName: fields.get("name"),
-        clientEmail: fields.get("email"),
-        eventDate: fields.get("date"),
-        message: fields.get("message") || null,
-        packageId: selectedPackageId ? Number(selectedPackageId) : null,
-        clientPhone: fields.get("phone") || null,
-        whatsAppOptIn: fields.get("whatsappOptIn") === "on",
-      });
-      form.reset();
-      setSelectedPackageId("");
-      setStatus("booked");
-    } catch (error) {
-      console.error("Unable to send booking inquiry.", error);
-      setBookingError(
-        error.response?.data?.message || "We could not send this inquiry. Please try again.",
-      );
-      setStatus("booking-error");
-    } finally {
-      setSending(false);
-    }
-  }
-  if (status === "loading") return <main className="state">Loading portfolio…</main>;
-  if (status === "missing")
+function PhotographerWebsite({ slug, categorySlug, preview }) {
+  const site = usePhotographerSite(slug, categorySlug, preview);
+  const booking = useBookingInquiry(slug);
+  const location = useLocation();
+  const previewKey = preview ? new URLSearchParams(location.search).get("template") : null;
+  const template = resolveWebsiteTemplate(previewKey ?? site.profile?.templateKey);
+  const Template = template.component;
+  const linkSearch = preview ? `?template=${template.key}` : "";
+  useEffect(() => {
+    if (site.status !== "ready" || template.key !== "minimal-gallery") return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      if (location.hash) {
+        // Section IDs are controlled by the templates, with no URL decoding needed.
+        document.getElementById(location.hash.slice(1))?.scrollIntoView();
+      } else {
+        window.scrollTo(0, 0);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname, location.hash, site.status, template.key]);
+
+  if (site.status === "loading") return <main className="state">Loading portfolio…</main>;
+  if (site.status === "forbidden") return <main className="state">SuperAdmin access is required. Sign in again if your role changed.</main>;
+  if (site.status === "missing") {
     return <main className="state">This photographer could not be found.</main>;
-  if (categorySlug) return (
-    <main className="portfolio-inner-page">
-      <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
-      <section className="section">
-        <p className="eyebrow dark">{profile.name} · Selected work</p>
-        <h1>{selectedCategory?.name || "Portfolio category not found"}</h1>
-        <Link className="portfolio-back-link" to={`/${slug}#portfolio`}>← All portfolio categories</Link>
-        {selectedCategory ? <div className="portfolio-grid portfolio-inner-grid">
-          {portfolioItems.map((item) => <article className="portfolio-card" key={item.id}>
-            <ResponsiveImage
-              src={item.imageUrl}
-              alt={item.title || "Portfolio photograph"}
-              sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
-            />
-            <div><span>{item.category}</span><h3>{item.title}</h3></div>
-          </article>)}
-        </div> : <p>This portfolio category could not be found.</p>}
-      </section>
-      <Footer photographerName={profile.name} location={profile.location} hasPackages={profile.packages?.length > 0} />
-    </main>
-  );
-  return (
-    <main id="top">
-      <Navbar slug={slug} hasPackages={profile.packages?.length > 0} />
-      <section className="hero" aria-labelledby="hero-title">
-        {heroImage && (
-          <ResponsiveImage
-            className="hero-image"
-            src={heroImage}
-            alt=""
-            fetchPriority="high"
-            loading="eager"
-            fallbackWidth={1600}
-            widths={[640, 960, 1280, 1600, 2000, 2400]}
-            sizes="100vw"
-            style={{
-              objectPosition: `${profile.heroFocalX ?? 50}% ${profile.heroFocalY ?? 50}%`,
-            }}
-            onError={(event) => event.currentTarget.remove()}
-          />
-        )}
-        <div className="hero-overlay" aria-hidden="true" />
-        <div className="hero-content">
-          <div className="hero-copy-block">
-            <p className="eyebrow hero-location">
-              <span className="hero-location-mark" aria-hidden="true" />
-              {profile.location ? `Photographer · ${profile.location}` : "Photographer & visual storyteller"}
-            </p>
-            <h1 id="hero-title">{profile.name}</h1>
-            <p className="hero-copy">{profile.bio}</p>
-            <div className="hero-actions">
-              <a className="button light" href="#portfolio">
-                <span>Explore the work</span><span aria-hidden="true">↗</span>
-              </a>
-              <a className="button ghost" href="#booking">
-                Start a conversation
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="hero-note">
-          <span className="hero-note-line" aria-hidden="true" />
-          <span>Scroll to explore</span>
-        </div>
-      </section>
-      <section id="portfolio" className="section">
-        <div className="section-heading portfolio-section-heading">
-          <div>
-            <p className="eyebrow dark">Selected work</p>
-            <h2>Stories worth returning to.</h2>
-          </div>
-          <p className="portfolio-section-intro">
-            A collection of moments, people, and places, thoughtfully brought together.
-          </p>
-        </div>
-        <div className={`portfolio-category-grid portfolio-category-grid--${profile.portfolioCategories?.length || 0}`}>
-          {(profile.portfolioCategories || []).map((category, index) => (
-            <Link
-              className={`portfolio-category-card${index === 0 ? " portfolio-category-card-featured" : ""}`}
-              key={category.slug}
-              to={`/${slug}/portfolio/${category.slug}`}
-            >
-              <ResponsiveImage
-                src={category.coverImageUrl}
-                alt=""
-                sizes="(max-width: 650px) 100vw, (max-width: 1000px) 50vw, 40vw"
-              />
-              <div className="portfolio-category-caption">
-                <div>
-                  <span className="portfolio-category-count">
-                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <path d="M3 6.25h3l1.25-1.5h5.5L14 6.25h3v9.5H3v-9.5Z" />
-                      <circle cx="10" cy="11" r="3.1" />
-                    </svg>
-                    {category.itemCount ?? 0}
-                  </span>
-                  <h3>{category.name}</h3>
-                </div>
-                <span className="portfolio-category-arrow" aria-hidden="true">↗</span>
-              </div>
-            </Link>
-          ))}
-          {!(profile.portfolioCategories || []).length && <p>No portfolio categories yet.</p>}
-        </div>
-      </section>      <section id="about" className="section split about">
-        <p className="eyebrow dark">About</p>
-        <div>
-          <h2>Photography with presence and purpose.</h2>
-          <p>
-            {profile.bio ||
-              "A refined visual record of the people, details, and feeling that make your story distinct."}
-          </p>
-        </div>
-      </section>
-      <section id="gear" className="section gear-section">
-        <div className="section-heading">
-          <p className="eyebrow dark">In the bag</p>
-          <h2>Tools behind the craft.</h2>
-        </div>
-        <div className="gear-grid">
-          {profile.gear.map((item) => (
-            <article className="gear-card" key={item.id}>
-              {item.imageUrl && (
-                <ResponsiveImage
-                  src={item.imageUrl}
-                  alt=""
-                  sizes="(max-width: 700px) 100vw, 33vw"
-                />
-              )}
-              <p>{item.category}</p>
-              <h3>
-                {item.brand} {item.model}
-              </h3>
-              <span>{item.description}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-      {profile.packages?.length > 0 && (
-        <section id="packages" className="section packages-section">
-          <div className="section-heading">
-            <p className="eyebrow dark">Experiences</p>
-            <h2>Find your story.</h2>
-            <p>Choose the coverage that fits your occasion. Every inquiry starts a conversation.</p>
-          </div>
-          <div className="packages-grid">
-            {profile.packages.map((item) => (
-              <article className="package-card" key={item.id}>
-                <ResponsiveImage
-                  src={item.imageUrl}
-                  alt=""
-                  sizes="(max-width: 700px) 100vw, 50vw"
-                />
-                <div className="package-card-body">
-                  <p className="eyebrow dark">Photography package</p>
-                  <h3>{item.name}</h3>
-                  <p>{item.description}</p>
-                  {item.coverageHours && <p className="package-meta">Up to {item.coverageHours} hours of coverage</p>}
-                  {item.deliverables && <p className="package-meta">Includes: {item.deliverables}</p>}
-                  <div className="package-card-bottom">
-                    <span>From {new Intl.NumberFormat(undefined, { style: "currency", currency: item.currency }).format(item.price)}</span>
-                    <a href="#booking" onClick={() => setSelectedPackageId(String(item.id))}>Inquire about this package ↗</a>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-      <section id="booking" className="booking-section">
-        <div>
-          <p className="eyebrow">Let’s create something enduring</p>
-          <h2>Tell me about your day.</h2>
-          <p>Share the date and a little about what you have in mind. I’ll be in touch soon.</p>
-        </div>
-        <form onSubmit={submitBooking}>
-          {profile.packages?.length > 0 && (
-            <label>
-              Package
-              <select value={selectedPackageId} onChange={(event) => setSelectedPackageId(event.target.value)}>
-                <option value="">General inquiry</option>
-                {profile.packages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
-            </label>
-          )}
-          <label>
-            Your name
-            <input name="name" required maxLength="120" />
-          </label>
-          <label>
-            Email address
-            <input name="email" type="email" required />
-          </label>
-          <label>
-            WhatsApp number (optional, with country code)
-            <input name="phone" type="tel" placeholder="+919876543210" pattern="\+[1-9][0-9]{7,14}" />
-          </label>
-          <label className="booking-opt-in">
-            <input name="whatsappOptIn" type="checkbox" />
-            I agree to receive updates about this inquiry on WhatsApp at the number above.
-          </label>
-          <label>
-            Event date
-            <input name="date" type="date" required />
-          </label>
-          <label>
-            Tell me more
-            <textarea name="message" rows="4" maxLength="2000" />
-          </label>
-          <button className="button light" disabled={sending}>
-            {sending ? "Sending…" : "Send inquiry"}
-          </button>
-          {status === "booked" && (
-            <p className="form-success">Thank you — your inquiry has been sent.</p>
-          )}
-          {status === "booking-error" && (
-            <p className="form-error" role="alert">{bookingError}</p>
-          )}
-        </form>
-      </section>
-      <Footer photographerName={profile.name} location={profile.location} hasPackages={profile.packages?.length > 0} />
-    </main>
-  );
+  }
+  return <>
+    {preview && <TemplatePreview slug={slug} photographerName={site.profile.name} templateKey={template.key} savedKey={site.profile.templateKey} />}
+    <Template site={{ ...site, slug: preview ? `platform/photographers/${slug}/preview` : slug, linkSearch }} booking={preview ? {
+      ...booking, submitBooking: event => event.preventDefault(),
+      bookingStatus: "booking-error", bookingError: "Preview only. Inquiries cannot be sent from this page.",
+    } : booking} />
+  </>;
 }

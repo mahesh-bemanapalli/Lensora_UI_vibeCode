@@ -139,19 +139,42 @@ export function PhotographerPage() {
         </div>
       </section>
       <section id="portfolio" className="section">
-        <div className="section-heading">
-          <p className="eyebrow dark">Selected work</p>
-          <h2>Stories worth returning to.</h2>
+        <div className="section-heading portfolio-section-heading">
+          <div>
+            <p className="eyebrow dark">Selected work</p>
+            <h2>Stories worth returning to.</h2>
+          </div>
+          <p className="portfolio-section-intro">
+            A collection of moments, people, and places, thoughtfully brought together.
+          </p>
         </div>
-        <div className="portfolio-category-grid">
-          {(profile.portfolioCategories || []).map((category) => <Link className="portfolio-category-card" key={category.slug} to={`/${slug}/portfolio/${category.slug}`}>
-            <ResponsiveImage
-              src={category.coverImageUrl}
-              alt=""
-              sizes="(max-width: 750px) 100vw, 33vw"
-            />
-            <div><span>{category.itemCount} photographs</span><h3>{category.name}</h3></div>
-          </Link>)}
+        <div className={`portfolio-category-grid portfolio-category-grid--${profile.portfolioCategories?.length || 0}`}>
+          {(profile.portfolioCategories || []).map((category, index) => (
+            <Link
+              className={`portfolio-category-card${index === 0 ? " portfolio-category-card-featured" : ""}`}
+              key={category.slug}
+              to={`/${slug}/portfolio/${category.slug}`}
+            >
+              <ResponsiveImage
+                src={category.coverImageUrl}
+                alt=""
+                sizes="(max-width: 650px) 100vw, (max-width: 1000px) 50vw, 40vw"
+              />
+              <div className="portfolio-category-caption">
+                <div>
+                  <span className="portfolio-category-count">
+                    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <path d="M3 6.25h3l1.25-1.5h5.5L14 6.25h3v9.5H3v-9.5Z" />
+                      <circle cx="10" cy="11" r="3.1" />
+                    </svg>
+                    {category.itemCount ?? 0}
+                  </span>
+                  <h3>{category.name}</h3>
+                </div>
+                <span className="portfolio-category-arrow" aria-hidden="true">↗</span>
+              </div>
+            </Link>
+          ))}
           {!(profile.portfolioCategories || []).length && <p>No portfolio categories yet.</p>}
         </div>
       </section>      <section id="about" className="section split about">

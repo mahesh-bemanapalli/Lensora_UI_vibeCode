@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { uploadImage } from "../lib/uploads";
+import { MediaLibraryPicker } from "../components/MediaLibrary";
 import { AdminNav } from "../components/AdminNav";
 import { nextDisplayOrder, displayOrderIsTaken, displayOrderConflictMessage } from "../lib/displayOrder";
 
@@ -38,7 +39,7 @@ export function PortfolioManagerPage() {
       setForm((current) => ({ ...current, imageUrl: image.url, imagePublicId: image.publicId }));
     } catch (error) {
       setMessage(
-        error.response?.data?.title ||
+        error.response?.data?.message || error.response?.data?.title ||
         "Image upload failed. Add Cloudinary configuration and try again.",
       );
     } finally {
@@ -116,6 +117,7 @@ export function PortfolioManagerPage() {
             <input type="file" accept="image/*" onChange={upload} disabled={uploading} />
             <span>{uploading ? "Uploading image…" : "Choose an image"}</span>
           </label>
+          <MediaLibraryPicker disabled={uploading} onSelect={image => setForm(current => ({ ...current, imageUrl: image.url, imagePublicId: image.publicId }))} />
           {form.imageUrl && (
             <img className="upload-preview" src={form.imageUrl} alt="Portfolio preview" />
           )}

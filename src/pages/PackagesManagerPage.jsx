@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { uploadImage } from "../lib/uploads";
+import { MediaLibraryPicker } from "../components/MediaLibrary";
 import { AdminNav } from "../components/AdminNav";
 import { nextDisplayOrder, displayOrderIsTaken, displayOrderConflictMessage } from "../lib/displayOrder";
 
@@ -42,7 +43,7 @@ export function PackagesManagerPage() {
       const image = await uploadImage(file);
       setForm((current) => ({ ...current, imageUrl: image.url, imagePublicId: image.publicId }));
     } catch (error) {
-      setMessage(error.response?.data?.title || "Image upload failed.");
+      setMessage(error.response?.data?.message || error.response?.data?.title || "Image upload failed.");
     } finally {
       setUploading(false);
     }
@@ -71,7 +72,7 @@ export function PackagesManagerPage() {
       setEditing(null);
       await load(true);
     } catch (error) {
-      setMessage(error.response?.data?.message || error.response?.data?.title || "Unable to save this package. Check the required fields.");
+      setMessage(error.response?.data?.message || error.response?.data?.message || error.response?.data?.title || "Unable to save this package. Check the required fields.");
     }
   }
 
@@ -111,6 +112,7 @@ export function PackagesManagerPage() {
           <label>Description<textarea name="description" rows="4" maxLength="2000" value={form.description} onChange={change} required /></label>
           <label>Included deliverables<textarea name="deliverables" rows="3" maxLength="2000" value={form.deliverables} onChange={change} placeholder="For example: edited gallery, prints, album" /></label>
           <label className="file-label">Upload cover image<input type="file" accept="image/*" onChange={upload} disabled={uploading} /><span>{uploading ? "Uploading…" : "Choose an image"}</span></label>
+          <MediaLibraryPicker disabled={uploading} onSelect={image => setForm(current => ({ ...current, imageUrl: image.url, imagePublicId: image.publicId }))} />
           {form.imageUrl && <img className="upload-preview" src={form.imageUrl} alt="Package preview" />}
           <label className="checkbox-label"><input name="isPublished" type="checkbox" checked={form.isPublished} onChange={change} /> Published on public page</label>
           <div className="inline-actions">

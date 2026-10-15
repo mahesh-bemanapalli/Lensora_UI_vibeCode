@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-export function Navbar({ slug, hasPackages }) {
+export function Navbar({ slug, hasPackages, linkSearch = "" }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -31,7 +31,7 @@ export function Navbar({ slug, hasPackages }) {
 
   return (
     <header className="navbar">
-      <Link className="brand" to={`/${slug}`} onClick={closeMenu}>
+      <Link className="brand" to={`/${slug}${linkSearch}`} onClick={closeMenu}>
         LENSORA
       </Link>
       <button
@@ -48,11 +48,11 @@ export function Navbar({ slug, hasPackages }) {
         <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
       </button>
       <nav id="site-navigation" className={menuOpen ? "is-open" : ""} aria-label="Main navigation">
-        <Link to={`/${slug}#portfolio`} onClick={closeMenu}>Portfolio</Link>
-        <Link to={`/${slug}#about`} onClick={closeMenu}>About</Link>
-        <Link to={`/${slug}#gear`} onClick={closeMenu}>Gear</Link>
-        {hasPackages && <Link to={`/${slug}#packages`} onClick={closeMenu}>Packages</Link>}
-        <Link to={`/${slug}#booking`} onClick={closeMenu}>Book</Link>
+        <Link to={`/${slug}${linkSearch}#portfolio`} onClick={closeMenu}>Portfolio</Link>
+        <Link to={`/${slug}${linkSearch}#about`} onClick={closeMenu}>About</Link>
+        <Link to={`/${slug}${linkSearch}#gear`} onClick={closeMenu}>Gear</Link>
+        {hasPackages && <Link to={`/${slug}${linkSearch}#packages`} onClick={closeMenu}>Packages</Link>}
+        <Link to={`/${slug}${linkSearch}#booking`} onClick={closeMenu}>Book</Link>
         {localStorage.getItem("lensora_token") && (
           <Link className="admin-link" to="/admin/bookings" onClick={closeMenu}>
             Dashboard

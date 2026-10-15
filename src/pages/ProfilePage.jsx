@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { uploadImage } from "../lib/uploads";
+import { MediaLibraryPicker } from "../components/MediaLibrary";
 import { AdminNav } from "../components/AdminNav";
+import { Link } from "react-router-dom";
 
 const emptyProfile = {
   name: "",
@@ -12,16 +14,23 @@ const emptyProfile = {
   profileImagePublicId: "",
   heroFocalX: 50,
   heroFocalY: 50,
+  templateKey: "editorial",
 };
 export function ProfilePage() {
   const [form, setForm] = useState(emptyProfile);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [savedSlug, setSavedSlug] = useState(null);
   useEffect(() => {
     api
       .get("/admin/profile")
-      .then(({ data }) => setForm({ ...emptyProfile, ...data }))
+      .then(({ data }) => {
+        setForm({ ...emptyProfile, ...data, templateKey: data.templateKey ?? "editorial" });
+        setLoaded(true);
+        setSavedSlug(data.slug);
+      })
       .catch(() => setMessage("Unable to load your profile."));
   }, []);
   const change = (event) =>
@@ -45,7 +54,7 @@ export function ProfilePage() {
       }));
     } catch (error) {
       setMessage(
-        error.response?.data?.title ||
+        error.response?.data?.message || error.response?.data?.title ||
           "Image upload failed. Add Cloudinary configuration and try again.",
       );
     } finally {
@@ -57,21 +66,25 @@ export function ProfilePage() {
     setSaving(true);
     setMessage("");
     try {
-      await api.put("/admin/profile", form);
+      const profile = { ...form };
+      delete profile.templateKey;
+      await api.put("/admin/profile", profile);
+      setSavedSlug(profile.slug);
       setMessage("Profile saved.");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Unable to save profile.");
+      setMessage(error.response?.data?.message || error.response?.data?.title || "Unable to save profile.");
     } finally {
       setSaving(false);
     }
   }
   return (
     <main className="dashboard">
-      <AdminNav />
+      <AdminNav publicSlug={savedSlug} />
       <section className="manager">
         <p className="eyebrow dark">Studio details</p>
         <h1>Your profile</h1>
         <p className="manager-intro">This information appears on your public photography page.</p>
+        {loaded && <p>Assigned design: <strong>{form.templateKey === "minimal-gallery" ? "Minimal Gallery" : "Editorial"}</strong>. <Link to={`/${form.slug}`}>View website</Link></p>}
         <form className="editor-form" onSubmit={save}>
           <div className="form-grid">
             <label>
@@ -112,6 +125,7 @@ export function ProfilePage() {
             <input type="file" accept="image/*" onChange={upload} disabled={uploading} />
             <span>{uploading ? "Uploading image…" : "Choose a cover image"}</span>
           </label>
+          <MediaLibraryPicker disabled={uploading} onSelect={image => setForm(current => ({ ...current, profileImageUrl: image.url, profileImagePublicId: image.publicId }))} />
           <div className="hero-focal-editor">
             <div>
               <p className="hero-focal-caption">Mobile hero preview</p>
@@ -168,7 +182,7 @@ export function ProfilePage() {
               maxLength="2000"
             />
           </label>
-          <button className="button dark" disabled={saving || uploading}>
+          <button className="button dark" disabled={!loaded || saving || uploading}>
             {saving ? "Saving…" : "Save profile"}
           </button>
           {message && (
